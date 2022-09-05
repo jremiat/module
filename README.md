@@ -5,10 +5,12 @@
 
 
 Garder l'app R, les deux scripts contenant les modules dans le même dossier.
-Si des images sont affichées, les mettre dans un fiichier "www" 
+Vous n'aurez jamais à toucher aux fichiers "comparaiso" et "modèle coex", le code à écrire et ou modifier est dans "app.R" qui compose l'application.
+Si des images sont affichées, les mettre dans un fichier "www" 
 
 ## Arguments pris par les modules
 
+Dans le fichier "app.R"
  Toujours garder les "library" et "source"
  Il faut créer des objets qui seront des arguments donnés aux parties Server du module nommé "modelecoexServer":
  Liste des étiquettes en latex des paramètres, liste des étiquettes des paramètres en UTF8(dans le même ordre), le point de départ de la réaction (mentionnant le nom des compartiments),
