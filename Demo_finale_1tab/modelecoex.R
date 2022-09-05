@@ -151,7 +151,7 @@ resoud_ode_et_MC <- function (modele,var, time,liste_param,liste_injection,xstar
 #                               #
 ################################
 #Module qui s'occupe d'un modèle et retourne toutes les variables pour la comparaison.
-modelecoexServer <- function(id,nom_modele,champ_vecteur,liste_etiquette,liste_valeur,nombre_estime,xstart,liste_etiquettes_tableau,variables,modif_param,transfo){
+modelecoexServer <- function(id,nom_modele,champ_vecteur,liste_etiquette,liste_valeur,nombre_estime,xstart,liste_etiquettes_tableau,modif_param,transfo){
   moduleServer(id,function(input, output,session){
     ns <- session$ns
     ######################################
@@ -237,10 +237,10 @@ modelecoexServer <- function(id,nom_modele,champ_vecteur,liste_etiquette,liste_v
     # Insert the right number of plot output objects into the web page
     output$plots <- renderUI({
       
-      plot_output_list <- lapply(1:length(variables), function(i) {
+      plot_output_list <- lapply(1:length(names(xstart)), function(i) {
         ns <- session$ns
-        box(title=paste("graphe de ",variables[i],sep=" "),status="info",width=6,
-            plotOutput(ns(paste("plot", variables[i], sep=""))),
+        box(title=paste("graphe de ",names(xstart)[i],sep=" "),status="info",width=6,
+            plotOutput(ns(paste("plot", names(xstart)[i], sep=""))),
         )
       })
       
@@ -250,20 +250,20 @@ modelecoexServer <- function(id,nom_modele,champ_vecteur,liste_etiquette,liste_v
     }) 
     
     observe({
-      lapply(1:length(variables), function(i) {
+      lapply(1:length(names(xstart)), function(i) {
         
-        plotname <- paste("plot", variables[i], sep="")
+        plotname <- paste("plot", names(xstart)[i], sep="")
         
         output[[plotname]] <- renderPlot({
           ggplot(simulation_MC())+
-            geom_line(aes(x=time,y=.data[[paste0(variables[i])]]),col='blue',size=0.4)+
-            geom_ribbon(aes(ymin=.data[[paste0(variables[i],"inf")]],ymax=.data[[paste0(variables[i],"sup")]], x= time), fill="skyblue3",alpha=0.3)+
+            geom_line(aes(x=time,y=.data[[paste0(names(xstart)[i])]]),col='blue',size=0.4)+
+            geom_ribbon(aes(ymin=.data[[paste0(names(xstart)[i],"inf")]],ymax=.data[[paste0(names(xstart)[i],"sup")]], x= time), fill="skyblue3",alpha=0.3)+
             theme_classic()+
             scale_x_continuous(expand = c(0, 0), limits = c(0,NA)) +
             scale_y_continuous(expand = c(0, 0), limits = c(0, NA))+
             #labs(x='time post vaccination(days)',y="Memory B-cells concentration (ASCS/millions)")+
             theme(legend.position = "none") +
-            ggtitle(paste0("graphe de ",variables[i]))
+            ggtitle(paste0("graphe de ",names(xstart)[i]))
         })
         
       })
@@ -532,6 +532,7 @@ modelecoexServer <- function(id,nom_modele,champ_vecteur,liste_etiquette,liste_v
     
     donnees_comparees<-reactive({
       donnees_comparees<-data.frame(donnees_MC())
+      variables <-names(xstart)
       for (i in variables){
         if (input[[paste0("transfo", i)]]){
           donnees_transfo<-as.data.table(donnees_brutes()[,c("time",paste0(i),"nom","modele","nom_complet")])
@@ -562,11 +563,11 @@ modelecoexServer <- function(id,nom_modele,champ_vecteur,liste_etiquette,liste_v
     # Insert the right number of plot output objects into the web page
     output$plotscompare <- renderUI({
       div(class = "dynamicSI",
-          plot_output_list <- lapply(1:length(variables), function(i) {
+          plot_output_list <- lapply(1:length(names(xstart)), function(i) {
             ns <- session$ns
-            box(title=paste("graphe de ",variables[i],sep=" "),status="info",width=6,
-                plotOutput(ns(paste("plotcompare", variables[i], sep=""))),
-                checkboxInput(inputId=ns(paste0("transfo",variables[i])), label="log-transform", value = FALSE))
+            box(title=paste("graphe de ",names(xstart)[i],sep=" "),status="info",width=6,
+                plotOutput(ns(paste("plotcompare", names(xstart)[i], sep=""))),
+                checkboxInput(inputId=ns(paste0("transfo",names(xstart)[i])), label="log-transform", value = FALSE))
           })
       )
       # Convert the list to a tagList - this is necessary for the list of items
@@ -576,16 +577,16 @@ modelecoexServer <- function(id,nom_modele,champ_vecteur,liste_etiquette,liste_v
     
     observe({
       if (nrow(donnees_MC())!=0){
-      lapply(1:length(variables), function(i) {
+      lapply(1:length(names(xstart)), function(i) {
         
-        plotname <- paste("plotcompare", variables[i], sep="")
+        plotname <- paste("plotcompare", names(xstart)[i], sep="")
         
         output[[plotname]] <- renderPlot({
           
             partie<-subset(donnees_comparees(),nom %in% noms_simul())
             ggplot(partie)+
-              geom_line(aes(x=time,y=.data[[paste0(variables[i])]],color=nom),size=0.4)+
-              geom_ribbon(aes(ymin=.data[[paste0(variables[i],"inf")]],ymax=.data[[paste0(variables[i],"sup")]], x= time, fill=nom), alpha=0.3)+
+              geom_line(aes(x=time,y=.data[[paste0(names(xstart)[i])]],color=nom),size=0.4)+
+              geom_ribbon(aes(ymin=.data[[paste0(names(xstart)[i],"inf")]],ymax=.data[[paste0(names(xstart)[i],"sup")]], x= time, fill=nom), alpha=0.3)+
               theme_classic()+
               scale_x_continuous(expand = c(0, 0), limits = c(0,NA)) +
               scale_y_continuous(expand = c(0, 0), limits = c(0, NA))+
@@ -594,7 +595,7 @@ modelecoexServer <- function(id,nom_modele,champ_vecteur,liste_etiquette,liste_v
               #labs(x='time post vaccination(days)',y="Memory B-cells concentration (ASCS/millions)")+
               theme(legend.position = "none") +
               theme(legend.position="top")+
-              ggtitle(paste0("graphe de ",variables[i]))
+              ggtitle(paste0("graphe de ",names(xstart)[i]))
            
             
         
